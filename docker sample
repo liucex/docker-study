@@ -110,26 +110,23 @@ args = --no-sandbox,--disable-gpu
     使用 MySQL 数据库请查看上方注释内容，并打开相应注释项
 
 3.运行容器
-  mrdoc-alpine
+mrdoc-alpine
 
 docker run -d --name mrdoc -p 10086:10086 -v ~/mrdoc:/app/MrDoc/config -v ~/mrdoc/media:/app/MrDoc/media jonnyan404/mrdoc-alpine
 
-    mrdoc-nginx
+mrdoc-nginx
 
 docker run -d --name mrdoc -p 10086:10086 -v ~/mrdoc:/app/MrDoc/config -v ~/mrdoc/media:/app/MrDoc/media jonnyan404/mrdoc-nginx
 
 自定义映射端口
 
-    mrdoc-alpine
-
+mrdoc-alpine
 docker run -d --name mrdoc -e LISTEN_PORT=port -p xxx:port -v ~/mrdoc:/app/MrDoc/config -v ~/mrdoc/media:/app/MrDoc/media jonnyan404/mrdoc-alpine
 
-    mrdoc-nginx
-
+mrdoc-nginx
 docker run -d --name mrdoc -e LISTEN_PORT=port -p xxx:port -v ~/mrdoc:/app/MrDoc/config -v ~/mrdoc/media:/app/MrDoc/media jonnyan404/mrdoc-nginx
 
 其中：
-
     xxx 为宿主机端口
     port 为容器端口
 
@@ -198,11 +195,7 @@ docker run -d \
 六、docker 可视化面板portainer
 
 方便执行 启动/停止/重启 功能。
-
 docker run -d  -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock  portainer/portainer-ce
-
- 
- 
  
  
 #启动 eclipse-theia 容器
