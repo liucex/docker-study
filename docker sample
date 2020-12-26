@@ -1,0 +1,214 @@
+{
+  "registry-mirrors": [
+    "https://registry.docker-cn.com",
+    "http://hub-mirror.c.163.com",
+    "https://docker.mirrors.ustc.edu.cn"
+  ]
+}
+ 
+ 
+ 参考文章 在Ubuntu上安装Docker
+
+安装需要的包
+$ sudo apt-get update
+
+安装 apt 依赖包，用于通过HTTPS来获取仓库
+$ sudo apt-get install \
+   apt-transport-https \
+   ca-certificates \
+   curl \
+   gnupg-agent \
+   software-properties-common
+
+添加 Docker 的官方 GPG 密钥
+$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+1
+设置稳定版仓库
+$ sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) \
+  stable"
+
+安装 Docker-ce
+$ sudo apt-get update
+$ sudo apt-get install docker-ce docker-ce-cli containerd.io
+
+设置开机自启动并启动 Docker-ce
+安装成功后默认开启，可忽略该步骤
+测试运行
+sudo docker run hello-world
+
+添加当前用户到 docker 用户组
+# 列出自己的用户组，确认自己在不在 docker 组中
+groups
+# 没有则新增docker组
+sudo groupadd docker
+# 把当前用户加入到docker组中
+sudo gpasswd -a ${USER} docker
+# 重启docker服务
+sudo service docker restart
+
+Deploy Portainer in Docker
+参考：https://documentation.portainer.io/v2.0/deploy/linux/?hsCtaTracking=a66b69bb-4970-46b7-bc31-cfc8022c7eb2%7C0d5be9a2-9dac-4ab1-9498-4b07566effd3
+docker volume create portainer_data
+
+ docker run -d  \
+ -p 8000:8000 \
+ -p 9000:9000   \
+ --name=portainer  \ 
+ --restart=always   \
+ -v /var/run/docker.sock:/var/run/docker.sock   \
+ -v portainer_data:/data   \
+ portainer/portainer-ce
+ 
+ 
+ Docker部署mrdoc
+ 一、简单教程
+mrdoc-alpine
+docker run -d --name mrdoc -p 10086:10086 jonnyan404/mrdoc-alpine
+mrdoc-nginx
+docker run -d --name mrdoc -p 10086:10086 jonnyan404/mrdoc-nginx
+
+默认端口：10086
+默认用户：admin
+默认密码：password
+
+打开 http://IP:10086 即可访问。
+二、进阶教程
+挂载本地目录
+1.创建文件夹：
+mkdir -p ~/mrdoc/media
+2.编写配置文件：
+vim ~/mrdoc/config.ini
+# 如果自己没有更换其它数据库的需求，请原样复制粘贴，不要乱改配置。
+# mysql 版本注意：建议在 5.6-8.0 以内，8.0 版本开始以下语句不支持，请自行解决。
+# mysql 需要手动创建一个数据库：create database mrdoc character set utf8mb4 collate utf8_bin;
+#grant all privileges on mrdoc.* to 'jonnyan404'@'%' identified by 'www.jonnyan404.top:8088' with grant option;
+#flush privileges;
+[site]
+# True 表示开启站点调试模式，False 表示关闭站点调试模式
+debug = False
+ 
+[database]
+# engine，指定数据库类型，接受 sqlite、mysql、oracle、postgresql
+engine = sqlite
+# name 表示数据库的名称
+# name = mrdoc
+# user 表示数据库用户名
+# user = jonnyan404
+# password 表示数据库用户密码
+# password = www.jonnyan404.top:8088
+# host 表示数据库主机地址
+# host = db_host
+# port 表示数据库端口
+# port=3306
+[chromium]
+# path 用于指定 Chromium 的路径，不指定则使用默认的
+path = /usr/lib/chromium/chrome
+args = --no-sandbox,--disable-gpu
+
+    使用 MySQL 数据库请查看上方注释内容，并打开相应注释项
+
+3.运行容器
+  mrdoc-alpine
+
+docker run -d --name mrdoc -p 10086:10086 -v ~/mrdoc:/app/MrDoc/config -v ~/mrdoc/media:/app/MrDoc/media jonnyan404/mrdoc-alpine
+
+    mrdoc-nginx
+
+docker run -d --name mrdoc -p 10086:10086 -v ~/mrdoc:/app/MrDoc/config -v ~/mrdoc/media:/app/MrDoc/media jonnyan404/mrdoc-nginx
+
+自定义映射端口
+
+    mrdoc-alpine
+
+docker run -d --name mrdoc -e LISTEN_PORT=port -p xxx:port -v ~/mrdoc:/app/MrDoc/config -v ~/mrdoc/media:/app/MrDoc/media jonnyan404/mrdoc-alpine
+
+    mrdoc-nginx
+
+docker run -d --name mrdoc -e LISTEN_PORT=port -p xxx:port -v ~/mrdoc:/app/MrDoc/config -v ~/mrdoc/media:/app/MrDoc/media jonnyan404/mrdoc-nginx
+
+其中：
+
+    xxx 为宿主机端口
+    port 为容器端口
+
+自行替换 xxx 与 port 即可。
+三、docker 版本手动升级
+
+    数据备份
+
+    如果未挂载本地目录，请按照步骤执行。
+    如果已挂载，仅需执行第 2 步即可。
+
+docker cp mrdoc:/app/MrDoc/config /tmp/config
+docker cp mrdoc:/app/MrDoc/media /tmp/media
+
+升级版本
+
+在此以 alpine 版本进行示例，如果使用 Nginx 版本，请将 jonnyan404/mrdoc-alpine 替换为 mrdoc-nginx
+
+docker pull jonnyan404/mrdoc-alpine
+docker stop mrdoc  && docker rm mrdoc
+然后重新运行之前的 docker run 命令
+
+ 恢复数据
+
+docker cp /tmp/config mrdoc:/app/MrDoc
+docker cp /tmp/media mrdoc:/app/MrDoc
+
+#觅道容器启动(luce自定义)
+ docker run -d  \
+ --name mrdoc   \
+ -p 10086:10086   \
+ -v /home/liucex/docker-mount/mrdoc:/app/MrDoc/config   \
+ -v /home/liucex/docker-mount/mrdoc/media:/app/MrDoc/media   \
+ jonnyan404/mrdoc-nginx
+ 
+ #启动觅道容器（luce自定义）
+ docker run -d  \
+ --name mrdoc  \
+ -p 10086:10086  \
+ -v /home/liucex/docker-mount/mrdoc:/app/MrDoc/config  \
+ -v /home/liucex/docker-mount/mrdoc/media:/app/MrDoc/media  \
+ jonnyan404/mrdoc-alpine
+
+
+
+
+四、docker 版本自动升级
+
+docker run -d \
+    --name watchtower \
+    --restart unless-stopped \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    containrrr/watchtower \
+    --cleanup \
+    -s "0 3 * * *" \
+    mrdoc
+
+ 注意：
+
+    仅限已挂载数据目录的使用，否则会造成数据丢失。
+    --cleanup 升级会自动清理老版本
+    -s 定时检查更新，上述默认每天凌晨 3 点检查更新
+    mrdoc 代表仅自动更新名称为 mrdoc 的容器
+    更多参数解释，请参考watchtower 官网
+
+六、docker 可视化面板portainer
+
+方便执行 启动/停止/重启 功能。
+
+docker run -d  -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock  portainer/portainer-ce
+
+ 
+ 
+ 
+ 
+#启动 eclipse-theia 容器
+ docker run -it --init -p 3000:3000   \
+ -v /home/liucex/docker-data/theia:/home/project:cached   \
+ theiaide/theia:next
+
+
+ 
